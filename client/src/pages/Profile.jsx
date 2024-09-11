@@ -49,7 +49,7 @@ export default function Profile() {
           alt="profile"
           className='h-24 w-24 mt-2 self-center cursor-pointer rounded-full object-cover' 
           onClick={()=>fileRef.current.click()}
-        />
+        /> 
         <p className='text-sm self-center'>
           {imageError ? (
             <span className='text-red-700'>

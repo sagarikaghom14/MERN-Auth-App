@@ -8,32 +8,42 @@ import path from 'path';
 
 dotenv.config();
 
+// MongoDB connection without deprecated options
 mongoose
-    .connect(process.env.MONGO)
+    .connect(process.env.MONGO, {
+        serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+        connectTimeoutMS: 10000, // Connection timeout after 10 seconds
+    })
     .then(() => {
         console.log('Connected to MongoDB');
     })
     .catch((err) => {
-        console.log(err);
+        console.error('Database connection error:', err);
     });
 
-const __dirname = path.resolve();
+// Improved error logging for MongoDB
+mongoose.connection.on('error', (err) => {
+    console.error('MongoDB connection error:', err);
+});
 
+const __dirname = path.resolve();
 const app = express();
 
-app.use(express.static(path.join(__dirname,'/client/dist')));
-app.get('*',(req,res)=>{
-    res.sendFile(path.join(__dirname,'client','dist','index.html'));
+// Serving static files
+app.use(express.static(path.join(__dirname, 'client', 'dist')));
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
 });
 
 app.use(express.json());
-
 app.use(cookieParser());
 
-app.use("/api/user", userRoutes);
-app.use("/api/auth", authRoutes);
+// Routes
+app.use('/api/user', userRoutes);
+app.use('/api/auth', authRoutes);
 
-app.use((err,req,res,next) => {
+// Error handling middleware
+app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
     return res.status(statusCode).json({
@@ -43,6 +53,8 @@ app.use((err,req,res,next) => {
     });
 });
 
-app.listen(3000, () => {
-    console.log("Server is listening on port 3000");
+// Server listening on dynamic port for cloud environments
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is listening on port ${PORT}`);
 });
